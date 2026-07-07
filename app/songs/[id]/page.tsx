@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { PageHeader } from "@/components/PageHeader";
 
-interface SongDetail { id: number; title: string; album_id: number; album_name: string; lyricist: string | null; composer: string | null; maqam: string | null; lyrics: string | null; audio_local: string | null; audio_opus: string | null; prev_id: number | null; next_id: number | null; }
+interface SongDetail { id: number; title: string; album_id: number; album_name: string; lyricist: string | null; composer: string | null; maqam: string | null; lyrics: string | null; audio_local: string | null; audio_opus: string | null; audio_m4a: string | null; prev_id: number | null; next_id: number | null; }
 
 export default function SongPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -22,7 +22,8 @@ export default function SongPage({ params }: { params: Promise<{ id: string }> }
   const isThisPlaying = isThis && isPlaying;
 
   const handlePlay = () => {
-    if (!song.audio_local) return;
+    const canPlay = song.audio_opus || song.audio_m4a;
+    if (!canPlay) return;
     if (isThis) { isThisPlaying ? pause() : resume(); }
     else { play(song, song.album_name, [song], 0); }
   };
@@ -42,7 +43,7 @@ export default function SongPage({ params }: { params: Promise<{ id: string }> }
           {song.composer && <span>ألحان: {song.composer}</span>}
         </div>
         {song.maqam && <div style={{ marginBottom: 16 }}><span className="maqam-badge">مقام {song.maqam}</span></div>}
-        {song.audio_local && (
+        {(song.audio_opus || song.audio_m4a) && (
           <button
             className={`song-play-btn${isThisPlaying ? " playing" : ""}`}
             onClick={handlePlay}
@@ -57,7 +58,16 @@ export default function SongPage({ params }: { params: Promise<{ id: string }> }
                 transition={{ duration: 0.15 }}
                 style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}
               >
-                {isThisPlaying ? "⏸" : "▶"}
+                {isThisPlaying ? (
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                    <rect x="6" y="4" width="4" height="16" rx="1"/>
+                    <rect x="14" y="4" width="4" height="16" rx="1"/>
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style={{ transform: "translateX(1px)" }}>
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                )}
               </motion.span>
             </AnimatePresence>
           </button>

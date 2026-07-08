@@ -306,7 +306,7 @@ button { font-family:inherit; cursor:pointer; }
 .album-list-item:hover { background:var(--surface); padding-right:20px; }
 .album-list-item:hover .album-list-title { color:var(--accent); }
 .album-list-cover {
-  width:56px; height:56px; flex-shrink:0; border-radius:4px;
+  position:relative; width:56px; height:56px; flex-shrink:0; border-radius:4px;
   overflow:hidden; background:var(--surface-2); box-shadow:var(--shadow-card);
 }
 .album-cover-fallback-sm {

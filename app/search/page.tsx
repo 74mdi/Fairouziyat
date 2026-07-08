@@ -73,7 +73,19 @@ function SearchContent() {
               <motion.div key={album.id} variants={li}>
                 <Link href={`/albums/${album.id}`} className="album-card">
                   <div className="album-cover-wrap">
-                    {album.cover_local ? <img src={`/api/covers/${encodeURIComponent(album.cover_local)}`} alt={album.name} className="album-cover-img" /> : <div className="album-cover-fallback">{album.name.charAt(0)}</div>}
+                    {album.cover_local ? (
+                      <img
+                        src={`/covers/${encodeURIComponent(
+                          album.cover_local.includes("/") ? album.cover_local.split("/").pop()! : album.cover_local
+                        )}`}
+                        alt={album.name}
+                        className="album-cover-img"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <div className="album-cover-fallback">{album.name.charAt(0)}</div>
+                    )}
                   </div>
                   <div className="album-info">
                     <div className="album-title">{hl(album.name, q)}</div>

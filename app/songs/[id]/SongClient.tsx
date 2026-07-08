@@ -73,13 +73,11 @@ export default function SongClient({ song }: { song: SongDetail }) {
       </motion.div>
 
       {song.lyrics && (
-        <motion.div className="lyrics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }}>
+        <motion.div className="lyrics" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.08 }}>
           {song.lyrics.split("\n\n").map((stanza, idx) => (
-            <motion.p key={idx} className="lyrics-stanza"
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.12 + idx * 0.05 }}>
+            <p key={idx} className="lyrics-stanza">
               {stanza}
-            </motion.p>
+            </p>
           ))}
         </motion.div>
       )}

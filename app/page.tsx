@@ -1,21 +1,35 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useDeferredValue } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import dynamic from "next/dynamic";
+import Image from "next/image";
+
+// Lazy load ThemeToggle to prevent hydration mismatch and speed up initial render
+const ThemeToggle = dynamic(() => import("@/components/ThemeToggle").then(mod => mod.ThemeToggle), {
+  ssr: false,
+});
 
 interface Album { id: number; name: string; cover_local: string | null; song_count: number; }
 interface Stats { total_albums: number; total_songs: number; total_composers: number; total_maqamat: number; }
 
-const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.03, delayChildren: 0.05 } } };
-const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.24, ease: [0.4, 0, 0.2, 1] } } };
+const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.02, delayChildren: 0.02 } } };
+const item = { hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } } };
 
 function Cover({ album }: { album: Album }) {
   if (album.cover_local) {
-    // cover_local is just the filename, e.g. "فيروز.jpg" — served statically from /public/covers/
     const filename = album.cover_local.includes("/") ? album.cover_local.split("/").pop()! : album.cover_local;
-    return <img src={`/covers/${encodeURIComponent(filename)}`} alt={album.name} className="album-cover-img" loading="lazy" decoding="async" />;
+    return (
+      <Image
+        src={`/covers/${encodeURIComponent(filename)}`}
+        alt={album.name}
+        fill
+        sizes="(max-width: 480px) 145px, (max-width: 768px) 178px, 200px"
+        className="album-cover-img"
+        loading="lazy"
+      />
+    );
   }
   return <div className="album-cover-fallback">{album.name.charAt(0)}</div>;
 }
@@ -26,6 +40,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const router = useRouter();
 
   useEffect(() => {
@@ -41,7 +56,7 @@ export default function Home() {
     setView(v); localStorage.setItem("fairouziyat-view", v);
   };
 
-  const filtered = search.trim() ? albums.filter(a => a.name.includes(search.trim())) : albums;
+  const filtered = deferredSearch.trim() ? albums.filter(a => a.name.includes(deferredSearch.trim())) : albums;
 
   const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && search.trim())

@@ -5,6 +5,8 @@ import { PageHeader } from "@/components/PageHeader";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
+import Image from "next/image";
+
 interface Song {
   id: number; title: string; album_id: number; track_number: number | null;
   maqam: string | null; audio_local: string | null; audio_opus: string | null; audio_m4a: string | null;
@@ -28,9 +30,18 @@ export default function AlbumClient({ data }: { data: { album: Album; songs: Son
 
       <div className="album-header">
         <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}>
-          {coverSrc
-            ? <img src={coverSrc} alt={album.name} className="album-header-cover" loading="eager" decoding="async" />
-            : <div className="album-header-cover-fallback">{album.name.charAt(0)}</div>}
+          {coverSrc ? (
+            <Image
+              src={coverSrc}
+              alt={album.name}
+              width={220}
+              height={220}
+              priority
+              className="album-header-cover"
+            />
+          ) : (
+            <div className="album-header-cover-fallback">{album.name.charAt(0)}</div>
+          )}
         </motion.div>
         <motion.div className="album-header-meta" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.08 }}>
           <h1 className="album-page-title">{album.name}</h1>

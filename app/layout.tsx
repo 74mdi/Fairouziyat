@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { PlayerProvider } from "@/contexts/PlayerContext";
-import { PlayerBar } from "@/components/PlayerBar";
 import Link from "next/link";
+import { PlayerBarWrapper } from "@/components/PlayerBarWrapper";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fairouziyat.vercel.app";
 
@@ -88,7 +88,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </a>
               </div>
             </footer>
-            <PlayerBar />
+            <PlayerBarWrapper />
           </PlayerProvider>
         </ThemeProvider>
       </body>

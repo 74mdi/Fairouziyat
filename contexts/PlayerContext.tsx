@@ -143,23 +143,26 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!currentSong || typeof window === "undefined" || !("mediaSession" in navigator)) return;
 
-    const artworkUrl = albumCover
-      ? `${window.location.origin}/api/covers/${encodeURIComponent(albumCover)}`
-      : "";
+    const filename = albumCover
+      ? (albumCover.includes("/") ? albumCover.split("/").pop()! : albumCover)
+      : null;
+    const artworkUrl = filename
+      ? `${window.location.origin}/covers/${encodeURIComponent(filename)}`
+      : `${window.location.origin}/og-default.jpg`;
 
     try {
       navigator.mediaSession.metadata = new window.MediaMetadata({
         title: currentSong.title,
-        artist: "فيروز",
+        artist: "السيدة فيروز",
         album: albumName || "فيروزيّات",
-        artwork: artworkUrl ? [
-          { src: artworkUrl, sizes: "96x96", type: "image/jpeg" },
-          { src: artworkUrl, sizes: "128x128", type: "image/jpeg" },
-          { src: artworkUrl, sizes: "192x192", type: "image/jpeg" },
-          { src: artworkUrl, sizes: "256x256", type: "image/jpeg" },
-          { src: artworkUrl, sizes: "384x384", type: "image/jpeg" },
-          { src: artworkUrl, sizes: "512x512", type: "image/jpeg" }
-        ] : [],
+        artwork: [
+          { src: artworkUrl, sizes: "96x96" },
+          { src: artworkUrl, sizes: "128x128" },
+          { src: artworkUrl, sizes: "192x192" },
+          { src: artworkUrl, sizes: "256x256" },
+          { src: artworkUrl, sizes: "384x384" },
+          { src: artworkUrl, sizes: "512x512" }
+        ],
       });
     } catch (e) {
       console.warn("Failed to set MediaSession metadata:", e);

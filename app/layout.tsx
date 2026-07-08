@@ -96,9 +96,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ThemeProvider>
           <PlayerProvider>
-            {/* min-height reserves space for footer to prevent CLS when player bar appears */}
+            {/* min-height reserves space so footer doesn't shift when player bar appears */}
             <div className="layout-shell">
-              {children}
+              <main>
+                {children}
+              </main>
               <footer className="site-footer">
                 <div className="site-footer-inner">
                   <Link href="/about" className="footer-link">عن الموقع والـ API</Link>

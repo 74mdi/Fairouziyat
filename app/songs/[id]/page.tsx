@@ -16,9 +16,11 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { id } = await params;
   const song = await getSongById(Number(id));
-  if (!song) return { title: "أغنية غير موجودة | فيروزيّات" };
+  if (!song) return { title: "أغنية غير موجودة" };
 
-  const title = `${song.title} — ${song.album_name} | فيروزيّات`;
+  // Layout template appends "| فيروزيّات" automatically
+  const title = `${song.title} — ${song.album_name}`;
+  const fullTitle = `${song.title} — ${song.album_name} | فيروزيّات`;
   const snippetParts: string[] = [];
   if (song.lyricist) snippetParts.push(`كلمات: ${song.lyricist}`);
   if (song.composer) snippetParts.push(`ألحان: ${song.composer}`);
@@ -36,7 +38,7 @@ export async function generateMetadata(
     description,
     alternates: { canonical },
     openGraph: {
-      title,
+      title: fullTitle,
       description,
       url: canonical,
       siteName: "فيروزيّات",
@@ -46,7 +48,7 @@ export async function generateMetadata(
     },
     twitter: {
       card: ogImage ? "summary_large_image" : "summary",
-      title,
+      title: fullTitle,
       description,
       ...(ogImage ? { images: [ogImage] } : {}),
     },

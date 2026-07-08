@@ -16,20 +16,22 @@ export async function generateMetadata(
 ): Promise<Metadata> {
   const { id } = await params;
   const data = await getAlbumById(Number(id));
-  if (!data) return { title: "ألبوم غير موجود | فيروزيّات" };
+  if (!data) return { title: "ألبوم غير موجود" };
 
   const { album } = data;
-  const title = `${album.name} | فيروزيّات`;
+  // title template in layout.tsx adds "| فيروزيّات" automatically
+  const title = album.name;
   const description = `${album.name} — ألبوم من أغاني السيدة فيروز، يضمّ ${album.song_count} أغنية. استمع وتصفّح الكلمات على فيروزيّات.`;
   const ogImage = coverUrl(album.cover_local);
   const canonical = `${SITE_URL}/albums/${id}`;
+  const fullTitle = `${album.name} | فيروزيّات`;
 
   return {
     title,
     description,
     alternates: { canonical },
     openGraph: {
-      title,
+      title: fullTitle,
       description,
       url: canonical,
       siteName: "فيروزيّات",
@@ -39,7 +41,7 @@ export async function generateMetadata(
     },
     twitter: {
       card: ogImage ? "summary_large_image" : "summary",
-      title,
+      title: fullTitle,
       description,
       ...(ogImage ? { images: [ogImage] } : {}),
     },

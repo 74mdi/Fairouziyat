@@ -12,8 +12,11 @@ const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.03, delay
 const item = { hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.24, ease: [0.4, 0, 0.2, 1] } } };
 
 function Cover({ album }: { album: Album }) {
-  if (album.cover_local)
-    return <img src={`/api/covers/${encodeURIComponent(album.cover_local)}`} alt={album.name} className="album-cover-img" />;
+  if (album.cover_local) {
+    // cover_local is just the filename, e.g. "فيروز.jpg" — served statically from /public/covers/
+    const filename = album.cover_local.includes("/") ? album.cover_local.split("/").pop()! : album.cover_local;
+    return <img src={`/covers/${encodeURIComponent(filename)}`} alt={album.name} className="album-cover-img" loading="lazy" decoding="async" />;
+  }
   return <div className="album-cover-fallback">{album.name.charAt(0)}</div>;
 }
 

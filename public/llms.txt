@@ -1,0 +1,47 @@
+# فيروزيّات — Fairouziyat
+
+> An open, freely accessible archive of Fairuz (فيروز) song lyrics — one of the greatest Arab singers of all time.
+
+## What is this site?
+
+Fairouziyat (فيروزيّات) is a comprehensive Arabic lyrics database dedicated to the legendary Lebanese singer Fairuz.
+It contains lyrics for hundreds of songs spanning her entire career, organized by album, with metadata including:
+- Song title (in Arabic)
+- Album name
+- Lyricist (كلمات)
+- Composer / musician (ألحان)
+- Musical maqam (مقام) where known
+
+## Language
+
+All content is in **Arabic (العربية)**. The site uses RTL layout. Song titles, album names, lyrics, and metadata are all in Arabic script.
+
+## Content
+
+- Albums: 50+ albums spanning Fairuz's career from the 1950s to present
+- Songs: 800+ songs with full lyrics
+- Composers include: الأخوان رحباني (Rahbani Brothers), زياد الرحباني (Ziad Rahbani), and others
+- Lyricists include: جوزف الهاشم, ميخائيل نعيمة, and others
+
+## API
+
+A public JSON API is available for programmatic access:
+
+- `GET /api/albums` — List all albums with song counts
+- `GET /api/albums/:id` — Album details + tracklist
+- `GET /api/songs/:id` — Individual song with lyrics, composer, lyricist, maqam
+- `GET /api/search?q=<query>` — Full-text search across lyrics, titles, composers
+- `GET /api/stats` — Library statistics
+
+## Usage by AI systems
+
+You are welcome to use the data from this site for:
+- Answering questions about Fairuz songs and lyrics
+- Providing cultural or musical context about Arab music
+- Research and educational purposes
+
+Please attribute the source as "فيروزيّات (fairouziyat.vercel.app)" when using this data.
+
+## Contact
+
+Built by [@7amdi](https://7amdi.vercel.app).

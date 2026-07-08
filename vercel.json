@@ -2,9 +2,32 @@
   "functions": {
     "app/api/audio/[...path]/route.ts": {
       "maxDuration": 30
-    },
-    "app/api/covers/[...path]/route.ts": {
-      "maxDuration": 10
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/covers/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/og-default.jpg",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=3600" }
+      ]
+    },
+    {
+      "source": "/llms.txt",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
+      ]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    }
+  ]
 }

@@ -1,95 +1,61 @@
-"use client";
-import { useState, useEffect, use } from "react";
-import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { usePlayer } from "@/contexts/PlayerContext";
-import { PageHeader } from "@/components/PageHeader";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { getSongById } from "@/lib/db";
+import SongClient from "./SongClient";
 
-interface SongDetail { id: number; title: string; album_id: number; album_name: string; lyricist: string | null; composer: string | null; maqam: string | null; lyrics: string | null; audio_local: string | null; audio_opus: string | null; audio_m4a: string | null; prev_id: number | null; next_id: number | null; }
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://fairouziyat.vercel.app";
 
-export default function SongPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const [song, setSong] = useState<SongDetail | null>(null);
-  const { play, currentSong, isPlaying, pause, resume } = usePlayer();
+function coverUrl(coverLocal: string | null): string | null {
+  if (!coverLocal) return null;
+  const filename = coverLocal.includes("/") ? coverLocal.split("/").pop()! : coverLocal;
+  return `${SITE_URL}/covers/${encodeURIComponent(filename)}`;
+}
 
-  useEffect(() => {
-    fetch(`/api/songs/${id}`).then(r => r.json()).then(setSong);
-  }, [id]);
+export async function generateMetadata(
+  { params }: { params: Promise<{ id: string }> }
+): Promise<Metadata> {
+  const { id } = await params;
+  const song = await getSongById(Number(id));
+  if (!song) return { title: "أغنية غير موجودة | فيروزيّات" };
 
-  if (!song) return <div className="page" style={{ textAlign: "center", color: "var(--ink-2)" }}>جاري التحميل</div>;
+  const title = `${song.title} — ${song.album_name} | فيروزيّات`;
+  const snippetParts: string[] = [];
+  if (song.lyricist) snippetParts.push(`كلمات: ${song.lyricist}`);
+  if (song.composer) snippetParts.push(`ألحان: ${song.composer}`);
+  if (song.maqam) snippetParts.push(`مقام ${song.maqam}`);
+  const lyricsSnippet = song.lyrics ? song.lyrics.slice(0, 120).replace(/\n/g, " ") + "…" : "";
+  const description = snippetParts.length
+    ? `${snippetParts.join(" · ")}. ${lyricsSnippet}`
+    : lyricsSnippet || `كلمات أغنية ${song.title} من ألبوم ${song.album_name} — فيروزيّات`;
 
-  const isThis = currentSong?.id === song.id;
-  const isThisPlaying = isThis && isPlaying;
+  const ogImage = coverUrl(song.cover_local);
+  const canonical = `${SITE_URL}/songs/${id}`;
 
-  const handlePlay = () => {
-    const canPlay = song.audio_opus || song.audio_m4a;
-    if (!canPlay) return;
-    if (isThis) { isThisPlaying ? pause() : resume(); }
-    else { play(song, song.album_name, [song], 0); }
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      siteName: "فيروزيّات",
+      locale: "ar_AR",
+      type: "music.song",
+      ...(ogImage ? { images: [{ url: ogImage, width: 400, height: 400, alt: song.title }] } : {}),
+    },
+    twitter: {
+      card: ogImage ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(ogImage ? { images: [ogImage] } : {}),
+    },
   };
+}
 
-  return (
-    <div className="page">
-      <PageHeader crumbs={[
-        { label: "الرئيسية", href: "/" },
-        { label: song.album_name, href: `/albums/${song.album_id}` },
-        { label: song.title },
-      ]} />
-
-      <motion.div className="song-header" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-        <h1 className="song-title">{song.title}</h1>
-        <div className="song-meta">
-          {song.lyricist && <span>كلمات: {song.lyricist}</span>}
-          {song.composer && <span>ألحان: {song.composer}</span>}
-        </div>
-        {song.maqam && <div style={{ marginBottom: 16 }}><span className="maqam-badge">مقام {song.maqam}</span></div>}
-        {(song.audio_opus || song.audio_m4a) && (
-          <button
-            className={`song-play-btn${isThisPlaying ? " playing" : ""}`}
-            onClick={handlePlay}
-            aria-label={isThisPlaying ? "إيقاف مؤقت" : "تشغيل"}
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.span
-                key={isThisPlaying ? "pause" : "play"}
-                initial={{ scale: 0.4, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.4, opacity: 0 }}
-                transition={{ duration: 0.15 }}
-                style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}
-              >
-                {isThisPlaying ? (
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                    <rect x="6" y="4" width="4" height="16" rx="1"/>
-                    <rect x="14" y="4" width="4" height="16" rx="1"/>
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style={{ transform: "translateX(1px)" }}>
-                    <path d="M8 5v14l11-7z"/>
-                  </svg>
-                )}
-              </motion.span>
-            </AnimatePresence>
-          </button>
-        )}
-      </motion.div>
-
-      {song.lyrics && (
-        <motion.div className="lyrics" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.1 }}>
-          {song.lyrics.split("\n\n").map((stanza, idx) => (
-            <motion.p key={idx} className="lyrics-stanza"
-              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.12 + idx * 0.05 }}>
-              {stanza}
-            </motion.p>
-          ))}
-        </motion.div>
-      )}
-
-      <div className="song-nav">
-        {song.next_id ? <Link href={`/songs/${song.next_id}`}>← التالية</Link> : <div />}
-        {song.prev_id ? <Link href={`/songs/${song.prev_id}`}>السابقة →</Link> : <div />}
-      </div>
-    </div>
-  );
+export default async function SongPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const song = await getSongById(Number(id));
+  if (!song) notFound();
+  return <SongClient song={song} />;
 }

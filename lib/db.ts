@@ -38,6 +38,7 @@ export interface SongRow {
 
 export interface SongDetailRow extends SongRow {
   album_name: string;
+  cover_local: string | null;
   prev_id: number | null;
   next_id: number | null;
 }
@@ -77,7 +78,7 @@ export async function getAlbumById(id: number): Promise<{ album: AlbumRow; songs
 
 export async function getSongById(id: number): Promise<SongDetailRow | null> {
   const { rows } = await getPool().query<SongDetailRow>(
-    `SELECT s.*, a.name AS album_name,
+    `SELECT s.*, a.name AS album_name, a.cover_local AS cover_local,
       (SELECT id FROM songs WHERE album_id = s.album_id AND track_number = s.track_number - 1 LIMIT 1) AS prev_id,
       (SELECT id FROM songs WHERE album_id = s.album_id AND track_number = s.track_number + 1 LIMIT 1) AS next_id
      FROM songs s JOIN albums a ON s.album_id = a.id WHERE s.id = $1`,

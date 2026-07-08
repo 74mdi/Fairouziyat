@@ -1,0 +1,13 @@
+# Target modern browsers only — eliminates ~12 KiB of legacy polyfills
+[production]
+chrome >= 90
+firefox >= 90
+safari >= 14
+edge >= 90
+opera >= 76
+samsung >= 14
+
+[development]
+last 1 chrome version
+last 1 firefox version
+last 1 safari version

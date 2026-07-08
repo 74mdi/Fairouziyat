@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { unstable_cache } from "next/cache";
 
 let pool: Pool | null = null;
 
@@ -52,40 +53,52 @@ export interface SearchSongRow {
   album_id: number;
 }
 
-export async function getAllAlbums(): Promise<AlbumRow[]> {
-  const { rows } = await getPool().query<AlbumRow>(`
-    SELECT id, name, cover_local,
-      (SELECT COUNT(*)::int FROM songs WHERE album_id = albums.id) AS song_count
-    FROM albums ORDER BY name
-  `);
-  return rows;
-}
+export const getAllAlbums = unstable_cache(
+  async (): Promise<AlbumRow[]> => {
+    const { rows } = await getPool().query<AlbumRow>(`
+      SELECT id, name, cover_local,
+        (SELECT COUNT(*)::int FROM songs WHERE album_id = albums.id) AS song_count
+      FROM albums ORDER BY name
+    `);
+    return rows;
+  },
+  ["all-albums"],
+  { revalidate: 86400, tags: ["albums"] }
+);
 
-export async function getAlbumById(id: number): Promise<{ album: AlbumRow; songs: SongRow[] } | null> {
-  const albumRes = await getPool().query<AlbumRow>(
-    `SELECT id, name, cover_local,
-      (SELECT COUNT(*)::int FROM songs WHERE album_id = albums.id) AS song_count
-     FROM albums WHERE id = $1`,
-    [id]
-  );
-  if (!albumRes.rows[0]) return null;
-  const songsRes = await getPool().query<SongRow>(
-    `SELECT * FROM songs WHERE album_id = $1 ORDER BY track_number`,
-    [id]
-  );
-  return { album: albumRes.rows[0], songs: songsRes.rows };
-}
+export const getAlbumById = unstable_cache(
+  async (id: number): Promise<{ album: AlbumRow; songs: SongRow[] } | null> => {
+    const albumRes = await getPool().query<AlbumRow>(
+      `SELECT id, name, cover_local,
+        (SELECT COUNT(*)::int FROM songs WHERE album_id = albums.id) AS song_count
+       FROM albums WHERE id = $1`,
+      [id]
+    );
+    if (!albumRes.rows[0]) return null;
+    const songsRes = await getPool().query<SongRow>(
+      `SELECT * FROM songs WHERE album_id = $1 ORDER BY track_number`,
+      [id]
+    );
+    return { album: albumRes.rows[0], songs: songsRes.rows };
+  },
+  ["album-by-id"],
+  { revalidate: 86400, tags: ["albums"] }
+);
 
-export async function getSongById(id: number): Promise<SongDetailRow | null> {
-  const { rows } = await getPool().query<SongDetailRow>(
-    `SELECT s.*, a.name AS album_name, a.cover_local AS cover_local,
-      (SELECT id FROM songs WHERE album_id = s.album_id AND track_number = s.track_number - 1 LIMIT 1) AS prev_id,
-      (SELECT id FROM songs WHERE album_id = s.album_id AND track_number = s.track_number + 1 LIMIT 1) AS next_id
-     FROM songs s JOIN albums a ON s.album_id = a.id WHERE s.id = $1`,
-    [id]
-  );
-  return rows[0] ?? null;
-}
+export const getSongById = unstable_cache(
+  async (id: number): Promise<SongDetailRow | null> => {
+    const { rows } = await getPool().query<SongDetailRow>(
+      `SELECT s.*, a.name AS album_name, a.cover_local AS cover_local,
+        (SELECT id FROM songs WHERE album_id = s.album_id AND track_number = s.track_number - 1 LIMIT 1) AS prev_id,
+        (SELECT id FROM songs WHERE album_id = s.album_id AND track_number = s.track_number + 1 LIMIT 1) AS next_id
+       FROM songs s JOIN albums a ON s.album_id = a.id WHERE s.id = $1`,
+      [id]
+    );
+    return rows[0] ?? null;
+  },
+  ["song-by-id"],
+  { revalidate: 86400, tags: ["songs"] }
+);
 
 export async function searchSongsAndAlbums(query: string) {
   const like = `%${query}%`;
@@ -107,15 +120,19 @@ export async function searchSongsAndAlbums(query: string) {
   return { songs: songsRes.rows, albums: albumsRes.rows };
 }
 
-export async function getLibraryStats() {
-  const { rows } = await getPool().query<{
-    total_albums: number; total_songs: number;
-    total_composers: number; total_maqamat: number;
-  }>(`SELECT
-    (SELECT COUNT(*)::int FROM albums) AS total_albums,
-    (SELECT COUNT(*)::int FROM songs) AS total_songs,
-    (SELECT COUNT(DISTINCT composer)::int FROM songs WHERE composer IS NOT NULL AND composer <> '') AS total_composers,
-    (SELECT COUNT(DISTINCT maqam)::int FROM songs WHERE maqam IS NOT NULL AND maqam <> '') AS total_maqamat
-  `);
-  return rows[0];
-}
+export const getLibraryStats = unstable_cache(
+  async () => {
+    const { rows } = await getPool().query<{
+      total_albums: number; total_songs: number;
+      total_composers: number; total_maqamat: number;
+    }>(`SELECT
+      (SELECT COUNT(*)::int FROM albums) AS total_albums,
+      (SELECT COUNT(*)::int FROM songs) AS total_songs,
+      (SELECT COUNT(DISTINCT composer)::int FROM songs WHERE composer IS NOT NULL AND composer <> '') AS total_composers,
+      (SELECT COUNT(DISTINCT maqam)::int FROM songs WHERE maqam IS NOT NULL AND maqam <> '') AS total_maqamat
+    `);
+    return rows[0];
+  },
+  ["library-stats"],
+  { revalidate: 86400, tags: ["stats"] }
+);

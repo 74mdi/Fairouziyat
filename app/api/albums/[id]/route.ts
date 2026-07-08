@@ -7,7 +7,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     const { id } = await params;
     const data = await getAlbumById(Number(id));
     if (!data) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+      },
+    });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "DB error" }, { status: 500 });
